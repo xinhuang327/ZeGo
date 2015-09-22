@@ -2,6 +2,8 @@ package zego
 
 import (
 	"encoding/json"
+	"fmt"
+	"strconv"
 )
 
 type TicketArray struct {
@@ -14,6 +16,20 @@ type TicketArray struct {
 
 type SingleTicket struct {
 	Ticket *Ticket `json:"ticket"`
+}
+
+type TicketResult struct {
+	SingleTicket *SingleTicket `json:"result"`
+}
+
+type TicketUpdate struct {
+	Ticket *TicketUpdateInner `json:"ticket"`
+}
+
+type TicketUpdateInner struct {
+	Id      uint64    `json:"id"`
+	Status  string    `json:"status"`
+	Comment *Comments `json:"comment"`
 }
 
 type Ticket struct {
@@ -46,6 +62,7 @@ type Ticket struct {
 	Via                   interface{} `json:"via"`
 	Custom_Fields         interface{} `json:"custom_fields"`
 	Fields                interface{} `json:"fields"`
+	Comment               Comments    `json:"comment"`
 }
 
 func (a Auth) ListTickets(pag ...string) (*TicketArray, error) {
@@ -125,6 +142,23 @@ func (a Auth) CreateTicket(data string) (*Resource, error) {
 
 	path := "/tickets.json"
 	resource, err := api(a, "POST", path, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return resource, nil
+
+}
+
+func (a Auth) UpdateTicket(up TicketUpdate) (*Resource, error) {
+
+	path := "/tickets/" + strconv.Itoa(int(up.Ticket.Id)) + ".json"
+	data, err := json.Marshal(&up)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(string(data))
+	resource, err := api(a, "PUT", path, string(data))
 	if err != nil {
 		return nil, err
 	}
